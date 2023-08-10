@@ -7,8 +7,8 @@ import (
 	"zgo.at/zstd/znet"
 )
 
-// RealIP sets the RemoteAddr to X-Real-Ip, X-Forwarded-For, or the RemoteAddr
-// without a port.
+// RealIP sets the RemoteAddr to Fly-Client-IP, CF-Connecting-IP, X-Real-IP,
+// X-Forwarded-For, or the RemoteAddr without a port.
 //
 // The end result willl never have a source port set. It will ignore local and
 // private addresses such as 127.0.0.1, 192.168.1.1, etc.
@@ -22,12 +22,18 @@ func RealIP(never ...string) func(http.Handler) http.Handler {
 }
 
 func realIP(r *http.Request) string {
-	cfip := r.Header.Get("Cf-Connecting-Ip")
+
+	flyip := r.Header.Get("Fly-Client-IP")
+	if flyip != "" && !znet.PrivateIPString(flyip) {
+		return flyip
+	}
+
+	cfip := r.Header.Get("CF-Connecting-IP")
 	if cfip != "" && !znet.PrivateIPString(cfip) {
 		return cfip
 	}
 
-	xrip := r.Header.Get("X-Real-Ip")
+	xrip := r.Header.Get("X-Real-IP")
 	if xrip != "" && !znet.PrivateIPString(xrip) {
 		return xrip
 	}

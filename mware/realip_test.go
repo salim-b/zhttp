@@ -16,6 +16,9 @@ func TestRealIP(t *testing.T) {
 		{"1.1.1.1:42", nil, "1.1.1.1"},
 		{"1.1.1.1", nil, "1.1.1.1"},
 
+		// Fly-Client-IP
+		{"1.2.3.4", http.Header{"Fly-Client-Ip": {"4.4.4.4"}}, "4.4.4.4"},
+
 		// CF-Connecting-IP
 		{"1.2.3.4", http.Header{"Cf-Connecting-Ip": {"4.4.4.4"}}, "4.4.4.4"},
 
