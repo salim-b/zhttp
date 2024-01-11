@@ -32,7 +32,8 @@ func UserError(err error) (int, error) {
 			Code() int
 			Error() string
 		}
-		dErr *DecodeError
+		dErr *ErrorDecode
+		uErr *ErrorDecodeUnknown
 		code = 500
 	)
 	switch {
@@ -40,6 +41,8 @@ func UserError(err error) (int, error) {
 		code = stErr.Code()
 		err = stErr
 	case errors.As(err, &dErr): // Invalid parameters.
+		code = 400
+	case errors.As(err, &uErr): // Invalid parameters.
 		code = 400
 	case errors.Is(err, sql.ErrNoRows):
 		code = 404
@@ -235,7 +238,7 @@ func Text(w http.ResponseWriter, s string) error {
 //
 // If i is a string or []byte it's assumed this is already JSON-encoded and
 // sent it as-is rather than sending a JSON-fied string.
-func JSON(w http.ResponseWriter, i interface{}) error {
+func JSON(w http.ResponseWriter, i any) error {
 	var j []byte
 	switch ii := i.(type) {
 	case string:
@@ -265,7 +268,7 @@ func JSON(w http.ResponseWriter, i interface{}) error {
 // Content-Type to text/html (unless it's already set).
 //
 // This requires ztpl to be set up.
-func Template(w http.ResponseWriter, name string, data interface{}) error {
+func Template(w http.ResponseWriter, name string, data any) error {
 	writeStatus(w, 200, "text/html; charset=utf-8")
 	return ztpl.Execute(w, name, data)
 }
